@@ -1,3 +1,5 @@
+#![feature(unstable)]
+
 use borsh::BorshDeserialize;
 use circuits::{
     header_chain::{
