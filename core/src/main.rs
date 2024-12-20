@@ -77,6 +77,8 @@ fn main() {
         .try_into()
         .unwrap();
 
+    println!("Header chain guest id: {:#?}", HEADER_CHAIN_GUEST_ID);
+
     // Set the previous proof type based on input_proof argument
     let prev_receipt = if input_proof.to_lowercase() == "none" {
         None
