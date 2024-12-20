@@ -18,3 +18,8 @@ lto = true
 
 [profile.release.build-override]
 opt-level = 3
+
+[patch.crates-io]
+risc0-sys={ git = "https://github.com/fiamma-chain/risc0", branch = "bitvm-1.2.0"}
+risc0-circuit-recursion-sys = { git = "https://github.com/fiamma-chain/risc0", branch = "bitvm-1.2.0"}
+risc0-core = { git = "https://github.com/fiamma-chain/risc0", branch = "bitvm-1.2.0"}

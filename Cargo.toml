@@ -28,5 +28,10 @@ num-traits = "0.2.19"
 tracing = "0.1.40"
 tracing-subscriber = {version = "0.3.18", features = ["env-filter"] }
 
+[patch.crates-io]
+risc0-sys={ git = "https://github.com/fiamma-chain/risc0", branch = "bitvm-1.2.0"}
+risc0-circuit-recursion-sys = { git = "https://github.com/fiamma-chain/risc0", branch = "bitvm-1.2.0"}
+risc0-core = { git = "https://github.com/fiamma-chain/risc0", branch = "bitvm-1.2.0"}
+risc0-circuit-recursion = { git = "https://github.com/fiamma-chain/risc0", branch = "bitvm-1.2.0"}
 # [features]
 # cuda = ["risc0-zkvm/cuda"]

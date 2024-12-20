@@ -1,5 +1,3 @@
-#![feature(unstable)]
-
 use borsh::BorshDeserialize;
 use circuits::{
     header_chain::{
@@ -296,15 +294,15 @@ mod tests {
         
 
         let proof = Proof::<Bn254> {
-            a: g1_from_bytes(&seal.a)?,
-            b: g2_from_bytes(&seal.b)?,
-            c: g1_from_bytes(&seal.c)?,
+            a: g1_from_bytes(&seal.a).unwrap(),
+            b: g2_from_bytes(&seal.b).unwrap(),
+            c: g1_from_bytes(&seal.c).unwrap(),
         };
 
         let public_inputs = Fr::from_be_bytes_mod_order(public_inputs);
 
         let pvk = ark_prepare_verifying_key(&vk);
-        let result = ArkGroth16::verify_proof(&pvk, &proof, &[public_inputs]);
+        let result = ArkGroth16::<Bn254>::verify_proof(&pvk, &proof, &[public_inputs]);
         println!("Result: {:#?}", result);
     }
 }
