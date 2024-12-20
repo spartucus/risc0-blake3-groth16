@@ -12,7 +12,7 @@ use bitcoin::{
 };
 use borsh::{BorshDeserialize, BorshSerialize};
 use crypto_bigint::{Encoding, U256};
-use risc0_zkvm::guest::env;
+use risc0_zkvm::{compute_image_id, guest::env, sha::Digestible};
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 
@@ -394,37 +394,61 @@ pub fn header_chain_circuit(guest: &impl ZkvmGuest) {
     println!("Header chain circuit took {:?} cycles", end - start);
 }
 
-/// The method ID for the header chain circuit.
-const HEADER_CHAIN_GUEST_ID: [u32; 8] = {
+const HEADER_CHAIN_GUEST_ELF: &[u8] = {
     match option_env!("BITCOIN_NETWORK") {
-        Some(network) if matches!(network.as_bytes(), b"mainnet") => [
-            3698181899, 2493383995, 2645667453, 2581037551, 2903196337, 1963019158, 1819266610,
-            2816371110,
-        ],
-        Some(network) if matches!(network.as_bytes(), b"testnet4") => [
-            2054544620, 3893068247, 1562334679, 3817290253, 716342840, 155273260, 3527496151,
-            3465943753,
-        ],
-        Some(network) if matches!(network.as_bytes(), b"signet") => [
-            3135044400, 3159803097, 153443868, 2355119596, 521371102, 287799635, 3711739625,
-            229413818,
-        ],
-        Some(network) if matches!(network.as_bytes(), b"regtest") => [
-            2566738292, 148345840, 1410711648, 1906697482, 1586982940, 3767445383, 3240218910,
-            4082615392,
-        ],
-        None => [
-            3698181899, 2493383995, 2645667453, 2581037551, 2903196337, 1963019158, 1819266610,
-            2816371110,
-        ],
-        _ => panic!("Invalid network type"),
+        Some(network) if matches!(network.as_bytes(), b"mainnet") => {
+            include_bytes!("../../elfs/mainnet-header-chain-guest")
+        }
+        Some(network) if matches!(network.as_bytes(), b"testnet4") => {
+            include_bytes!("../../elfs/testnet4-header-chain-guest")
+        }
+        Some(network) if matches!(network.as_bytes(), b"signet") => {
+            include_bytes!("../../elfs/signet-header-chain-guest")
+        }
+        Some(network) if matches!(network.as_bytes(), b"regtest") => {
+            include_bytes!("../../elfs/regtest-header-chain-guest")
+        }
+        None => include_bytes!("../../elfs/mainnet-header-chain-guest"),
+        _ => panic!("Invalid path or ELF file"),
     }
 };
+
+// /// The method ID for the header chain circuit.
+// const HEADER_CHAIN_GUEST_ID: [u32; 8] = {
+//     match option_env!("BITCOIN_NETWORK") {
+//         Some(network) if matches!(network.as_bytes(), b"mainnet") => [
+//             3698181899, 2493383995, 2645667453, 2581037551, 2903196337, 1963019158, 1819266610,
+//             2816371110,
+//         ],
+//         Some(network) if matches!(network.as_bytes(), b"testnet4") => [
+//             2054544620, 3893068247, 1562334679, 3817290253, 716342840, 155273260, 3527496151,
+//             3465943753,
+//         ],
+//         Some(network) if matches!(network.as_bytes(), b"signet") => [
+//             3135044400, 3159803097, 153443868, 2355119596, 521371102, 287799635, 3711739625,
+//             229413818,
+//         ],
+//         Some(network) if matches!(network.as_bytes(), b"regtest") => [
+//             2566738292, 148345840, 1410711648, 1906697482, 1586982940, 3767445383, 3240218910,
+//             4082615392,
+//         ],
+//         None => [
+//             3698181899, 2493383995, 2645667453, 2581037551, 2903196337, 1963019158, 1819266610,
+//             2816371110,
+//         ],
+//         _ => panic!("Invalid network type"),
+//     }
+// };
 
 /// The final circuit that verifies the output of the header chain circuit.
 pub fn final_circuit(guest: &impl ZkvmGuest) {
     let start = env::cycle_count();
     let input: FinalCircuitInput = guest.read_from_host::<FinalCircuitInput>();
+    let HEADER_CHAIN_GUEST_ID: [u32; 8] = compute_image_id(HEADER_CHAIN_GUEST_ELF)
+        .unwrap()
+        .as_words()
+        .try_into()
+        .unwrap();
     guest.verify(HEADER_CHAIN_GUEST_ID, &input.block_header_circuit_output);
     input.spv.verify(
         input
