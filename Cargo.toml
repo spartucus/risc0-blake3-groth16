@@ -6,13 +6,18 @@ members = ["circuits", "core", "guests/header-chain", "guests/final-circuit"]
 
 [workspace.dependencies]
 hex = "0.4.3"
-risc0-zkvm = { version="1.2.0", features = ["prove"]}
-risc0-zkp = "1.2.0"
+# risc0-zkvm = { version="1.2.0", features = ["prove"]}
+# risc0-zkp = "1.2.0"
 env_logger = "0.10"
 serde = "1.0"
 serde_json = "1.0.108"
 anyhow = { version = "1.0", default-features = false}
-risc0-groth16 = {version="1.2.0", features=["prove"]}
+# risc0-groth16 = {version="1.2.0", features=["prove"]}
+risc0-zkvm = { git = "https://github.com/fiamma-chain/risc0", branch = "bitvm-1.2.0", features = ["prove"]}
+risc0-groth16 = { git = "https://github.com/fiamma-chain/risc0", branch = "bitvm-1.2.0", features = ["prove"]}
+risc0-zkp = { git = "https://github.com/fiamma-chain/risc0", branch = "bitvm-1.2.0"}
+risc0-binfmt = { git = "https://github.com/fiamma-chain/risc0", branch = "bitvm-1.2.0"}
+risc0-build = { git = "https://github.com/fiamma-chain/risc0", branch = "bitvm-1.2.0"}
 bitcoin-pow = {path="./risc0_circuits/bitcoin-pow"}
 verify-stark = {path="./risc0_circuits/verify-stark"}
 tempfile = "3.10.1"
