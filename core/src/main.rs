@@ -180,6 +180,15 @@ mod tests {
     use docker::stark_to_succinct;
     use hex_literal::hex;
     use risc0_zkvm::compute_image_id;
+    use ark_bn254::{Bn254, Fr};
+    use ark_groth16::{PreparedVerifyingKey, Proof, VerifyingKey, prepare_verifying_key as ark_prepare_verifying_key, Groth16 as ArkGroth16};
+    use risc0_groth16::{
+        g1_from_bytes, g2_from_bytes, ProofJson, PublicInputsJson, Seal, VerifyingKeyJson,
+    };
+    use ark_serialize::{
+        CanonicalDeserialize, CanonicalSerialize, Compress, Validate,
+    };
+    use ark_ff::{BigInteger, PrimeField};
 
     const MAINNET_BLOCK_HASHES: [[u8; 32]; 11] = [
         hex!("6fe28c0ab6f1b372c1a6a246ae63f74f931e8365e15a089c68d6190000000000"),
@@ -273,5 +282,27 @@ mod tests {
         let final_output_bytes: [u8; 32] = final_output.try_into().unwrap();
         let final_output_trimmed: [u8; 31] = final_output_bytes[..31].try_into().unwrap();
         assert_eq!(final_output_trimmed, output_json_bytes);
+
+        test_groth16(&proof, &final_output_trimmed);
+    }
+
+    fn test_groth16(seal: &Seal, public_inputs: &[u8]) {
+        let vk_json = "verification_key.json";
+        let vk: VerifyingKeyJson =
+            serde_json::from_str(vk_json).expect("JSON was not well-formatted");
+        let vk = vk.verifying_key().unwrap().ark_verifying_key();
+        
+
+        let proof = Proof::<Bn254> {
+            a: g1_from_bytes(&seal.a)?,
+            b: g2_from_bytes(&seal.b)?,
+            c: g1_from_bytes(&seal.c)?,
+        };
+
+        let public_inputs = Fr::from_be_bytes_mod_order(public_inputs);
+
+        let pvk = ark_prepare_verifying_key(&vk);
+        let result = ArkGroth16::verify_proof(&pvk, &proof, &[public_inputs]);
+        println!("Result: {:#?}", result);
     }
 }
