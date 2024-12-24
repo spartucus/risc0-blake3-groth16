@@ -180,6 +180,12 @@ mod tests {
     use docker::stark_to_succinct;
     use hex_literal::hex;
     use risc0_zkvm::compute_image_id;
+    // use risc0_groth16::verifier::prepared_verifying_key;
+    use risc0_groth16::{PublicInputsJson, Seal};
+    use risc0_groth16::{to_json, ProofJson, Verifier, VerifyingKeyJson, Fr};
+    use hex::ToHex;
+    use ark_bn254::Fr as ArkFr;
+    use ark_ff::fields::PrimeField;
 
     const MAINNET_BLOCK_HASHES: [[u8; 32]; 11] = [
         hex!("6fe28c0ab6f1b372c1a6a246ae63f74f931e8365e15a089c68d6190000000000"),
@@ -273,5 +279,22 @@ mod tests {
         let final_output_bytes: [u8; 32] = final_output.try_into().unwrap();
         let final_output_trimmed: [u8; 31] = final_output_bytes[..31].try_into().unwrap();
         assert_eq!(final_output_trimmed, output_json_bytes);
+
+        let vk_json = "../verification_key.json";
+        let vk_json_str = std::fs::read_to_string(vk_json).unwrap();
+        let vk: VerifyingKeyJson = serde_json::from_str(&vk_json_str).unwrap();
+        let vk = vk.verifying_key().unwrap();
+
+        // One public input, which is big endian bytes.
+        let pi = ArkFr::from_be_bytes_mod_order(&final_output_trimmed);
+
+        let public_inputs = PublicInputsJson {
+            values: vec![pi.to_string()],
+        };
+
+        let public_inputs = public_inputs.to_scalar().unwrap();
+
+        let verifier = Verifier::new(&proof, &public_inputs, &vk).unwrap();
+        verifier.verify().unwrap();
     }
 }

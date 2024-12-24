@@ -582,6 +582,8 @@ checksum = "7c74b8349d32d297c9134b8c88677813a227df8f779daa29bfc29c183fe3dca6"
 name = "core"
 version = "0.1.0"
 dependencies = [
+ "ark-bn254",
+ "ark-ff",
  "bitcoin",
  "blake3",
  "borsh",
